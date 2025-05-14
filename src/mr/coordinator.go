@@ -9,8 +9,43 @@ import "net/http"
 
 type Coordinator struct {
 	// Your definitions here.
-
+	files []string
+	nReduce int
+	nMap int
+	phase SchedulePhase
+	task []Task
+	heartBeatCh chan heartBeatMsg
+	reportCh chan reportMsg
+	doneCh chan struct{}
 }
+
+//
+// create a Coordinator.
+// main/mrcoordinator.go calls this function.
+// nReduce is the number of reduce tasks to use.
+//
+func MakeCoordinator(files []string, nReduce int) *Coordinator {
+	c := Coordinator{
+
+		files: files,
+		nReduce: nReduce,
+		nMap: len(files),
+
+		phase: MapPhase,
+		task: make([]Task, 0),
+
+		heartBeatCh: make(chan heartBeatMsg),
+		reportCh: make(chan reportMsg),
+
+		doneCh: make(chan struct{}),
+
+	}
+	// Your code here.
+	
+	c.server()
+	return &c
+}
+
 
 // Your code here -- RPC handlers for the worker to call.
 
@@ -24,6 +59,31 @@ func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 	return nil
 }
 
+func (c *Coordinator) heartBeatRPC(request *heartBeatRequest, reply *heartBeatResponse) error {
+
+	msg := heartBeatMsg{
+		response: reply,
+		ok: make(chan struct{}),
+	}
+
+	c.heartBeatCh <- msg // put the channel into the coordinator
+	<-msg.ok
+
+	return nil
+}
+
+func (c* Coordinator) reprotRPC(request *ReportRequest, reply *ReportResponse) error {
+
+	msg := reportMsg{
+		request: request,
+		ok: make(chan struct{}),
+	}
+
+	c.reportCh <- msg // put the channel into the coordinator
+	<-msg.ok
+
+	return nil
+}
 
 //
 // start a thread that listens for RPCs from worker.go
@@ -54,17 +114,4 @@ func (c *Coordinator) Done() bool {
 	return ret
 }
 
-//
-// create a Coordinator.
-// main/mrcoordinator.go calls this function.
-// nReduce is the number of reduce tasks to use.
-//
-func MakeCoordinator(files []string, nReduce int) *Coordinator {
-	c := Coordinator{}
 
-	// Your code here.
-
-
-	c.server()
-	return &c
-}

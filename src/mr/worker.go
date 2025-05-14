@@ -35,7 +35,26 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the coordinator.
 	// CallExample()
+	for {
+		response = doHeartBeat()
+		log.Printf("Worker recieved coordinator heart beat msg %v \n", response)
 
+		switch response.JobType{
+	
+		case MapJob:
+			doMapTask(mapf, response)
+		
+		case ReduceJob:
+			doReduceTask(reducef, response)
+		
+		case WaitJob:
+
+		case CompleteJob:
+			return
+		default:
+				panic(fmt.Sprintf("unexpected jobType %v", response.JobType))
+		}
+	}
 }
 
 //

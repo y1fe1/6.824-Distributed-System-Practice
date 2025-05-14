@@ -23,7 +23,38 @@ type ExampleReply struct {
 }
 
 // Add your RPC definitions here.
+// this should be send by the worker to ask for job
+type heartBeatRequest struct {
 
+
+}
+
+// and the coordinator should return a hearBeatResponse for it
+type heartBeatResponse struct {
+
+
+}
+
+type heartBeatMsg struct {
+	response *heartBeatResponse
+	ok chan struct{}
+}
+
+
+type ReportRequest struct {
+
+	
+}
+
+type ReportResponse struct {
+
+
+}
+
+type reportMsg struct {
+	request	*ReportRequest
+	ok chan struct{}
+}
 
 // Cook up a unique-ish UNIX-domain socket name
 // in /var/tmp, for the coordinator.
